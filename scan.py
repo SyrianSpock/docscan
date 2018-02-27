@@ -16,8 +16,9 @@ def argparser(parser=None):
 def main(args):
     logging.basicConfig(level=max(logging.CRITICAL - (10 * args.verbose), 0))
 
-    img = cv2.imread(args.file)
-    logging.info('Image {file} of shape {shape} loaded successfully'.format(file=args.file, shape=img.shape))
+    img = cv2.imread(args.file, 0)
+    logging.info('Image {file} of shape {shape} loaded successfully'
+        .format(file=args.file, shape=img.shape))
 
     cv2.imshow('Input', img)
     cv2.waitKey(0)
