@@ -91,12 +91,47 @@ def segment_by_angle(image, lines, debug=False):
 
     return list(segmented.values())
 
+def intersection(line1, line2):
+    rho1, theta1 = line1
+    rho2, theta2 = line2
+    A = np.array([
+        [np.cos(theta1), np.sin(theta1)],
+        [np.cos(theta2), np.sin(theta2)]
+    ])
+    b = np.array([[rho1], [rho2]])
+    return np.linalg.solve(A, b)
+
+def draw_cross(image, pos, size=10, color=(0, 0, 255), thickness=2):
+    top = (pos[0], int(pos[1] - size / 2))
+    down = (pos[0], int(pos[1] + size / 2))
+    left = (int(pos[0] - size / 2), pos[1])
+    right = (int(pos[0] + size / 2), pos[1])
+
+    cv2.line(image, top, down, color, thickness)
+    cv2.line(image, left, right, color, thickness)
+
+def segmented_intersections(image, lines, debug=False):
+    intersections = []
+    for i, group in enumerate(lines[:-1]):
+        for next_group in lines[i+1:]:
+            intersections += [intersection(l1, l2) for l1 in group for l2 in next_group]
+    logging.info('Found {} intersections'.format(len(intersections)))
+
+    if debug:
+        img_debug = image.copy()
+        for point in intersections:
+            draw_cross(img_debug, point)
+        display(img_debug)
+
+    return intersections
+
 def main(args):
     configure_logging(args.verbose)
     img, gray = load_image(args.file, debug=args.debug)
     edges = edge_detect(gray, debug=args.debug)
     lines = find_lines(img, edges, debug=args.debug)
     segmented = segment_by_angle(img, lines, debug=args.debug)
+    intersections = segmented_intersections(img, segmented, debug=args.debug)
 
     cv2.destroyAllWindows()
 
