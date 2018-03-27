@@ -125,6 +125,41 @@ def segmented_intersections(image, lines, debug=False):
 
     return intersections
 
+def _closest_point(point, points):
+    distance = [np.linalg.norm(p.flatten() - point.flatten()) for p in points]
+
+    closest_point_index = np.argmin(distance)
+    closest_point = points[closest_point_index]
+
+    logging.debug('Found nearest to {} at {} : {}'
+                    .format(point, closest_point_index, closest_point.flatten()))
+
+    return closest_point_index, closest_point
+
+def image_corners(image):
+    return np.array([
+        [0, 0], # topleft
+        [0, image.shape[0]], # topright
+        [image.shape[1], image.shape[0]], # bottomright
+        [image.shape[1], 0], # bottomleft
+    ], dtype=np.float32)
+
+def find_document_corners(image, points, debug=False):
+    document_corners = np.array([
+        _closest_point(corner, points)[1].flatten()
+        for corner in image_corners(image)
+    ])
+
+    if debug:
+        img_debug = image.copy()
+        for point in points:
+            draw_cross(img_debug, point)
+        for point in document_corners:
+            draw_cross(img_debug, point, color=(0, 255, 0))
+        display(img_debug)
+
+    return document_corners
+
 def main(args):
     configure_logging(args.verbose)
     img, gray = load_image(args.file, debug=args.debug)
@@ -132,6 +167,8 @@ def main(args):
     lines = find_lines(img, edges, debug=args.debug)
     segmented = segment_by_angle(img, lines, debug=args.debug)
     intersections = segmented_intersections(img, segmented, debug=args.debug)
+
+    corners = find_document_corners(img, intersections, debug=args.debug)
 
     cv2.destroyAllWindows()
 
