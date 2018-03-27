@@ -160,6 +160,16 @@ def find_document_corners(image, points, debug=False):
 
     return document_corners
 
+def undistort_document(image, corners, debug=False):
+    transform = cv2.getPerspectiveTransform(corners, image_corners(image))
+    doc = cv2.warpPerspective(image, transform, (image.shape[1], image.shape[0]))
+
+    if debug:
+        img_debug = doc.copy()
+        display(img_debug)
+
+    return doc
+
 def main(args):
     configure_logging(args.verbose)
     img, gray = load_image(args.file, debug=args.debug)
@@ -169,6 +179,7 @@ def main(args):
     intersections = segmented_intersections(img, segmented, debug=args.debug)
 
     corners = find_document_corners(img, intersections, debug=args.debug)
+    document = undistort_document(img, corners, debug=args.debug)
 
     cv2.destroyAllWindows()
 
