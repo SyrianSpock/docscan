@@ -177,6 +177,25 @@ def undistort_document(image, corners, output_shape, debug=False):
 
     return doc
 
+def enhance_contrast(image, debug=False):
+    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10,10))
+    image = clahe.apply(image)
+
+    if debug:
+        img_debug = image.copy()
+        display(img_debug)
+
+    return image
+
+def extract_text(image, document_size, language):
+    img = Image.fromarray(image).resize(document_size)
+    txt = pytesseract.image_to_string(img, lang=language, config='--oem=2 --psm=2').encode('utf-8')
+
+    logging.debug('OCR output:')
+    logging.debug(txt)
+
+    return txt
+
 def main(args):
     configure_logging(args.verbose)
     img, gray = load_image(args.file, debug=args.debug)
@@ -186,19 +205,11 @@ def main(args):
     intersections = segmented_intersections(img, segmented, debug=args.debug)
 
     corners = find_document_corners(img, intersections, debug=args.debug)
-    document = undistort_document(img, corners, img.shape, debug=args.debug)
-
     gray = undistort_document(gray, corners, img.shape, debug=args.debug)
+    gray = enhance_contrast(gray, debug=args.debug)
+    text = extract_text(gray, PAPER_SIZES[args.paper_size], args.lang)
 
-    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10,10))
-    gray = clahe.apply(gray)
-
-    img = Image.fromarray(gray).resize(PAPER_SIZES[args.paper_size])
-
-    txt = pytesseract.image_to_string(img, lang=args.lang, config='--oem=2 --psm=2').encode('utf-8')
-    print(txt)
-
-    cv2.destroyAllWindows()
+    print(text)
 
 if __name__ == '__main__':
     args = argparser().parse_args()
