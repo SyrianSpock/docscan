@@ -13,12 +13,15 @@ PAPER_SIZES = {
 def argparser(parser=None):
     parser = parser or argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument("file", help="Picture of your document", type=str)
-    parser.add_argument("--debug", action='store_true',
+    parser.add_argument('file', help='Picture of your document', type=str)
+    parser.add_argument('--debug', action='store_true',
                         help='Display intermediate results')
-    parser.add_argument('--verbose', '-v', action='count', default=3)
-    parser.add_argument('--paper-size', '-p', type=str, default='A4')
-    parser.add_argument('--lang', '-l', type=str, default=None)
+    parser.add_argument('--verbose', '-v', action='count', default=3,
+                        help='Logger verbosity level (default: INFO)')
+    parser.add_argument('--paper-size', '-p', type=str, default='A4',
+                        help='Document paper size (default: A4)')
+    parser.add_argument('--lang', '-l', type=str, default=None,
+                        help='Language of the document (default: None)')
 
     return parser
 
