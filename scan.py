@@ -136,18 +136,18 @@ def _closest_point(point, points):
 
     return closest_point_index, closest_point
 
-def image_corners(image):
+def image_corners(shape):
     return np.array([
         [0, 0], # topleft
-        [0, image.shape[0]], # topright
-        [image.shape[1], image.shape[0]], # bottomright
-        [image.shape[1], 0], # bottomleft
+        [0, shape[0]], # topright
+        [shape[1], shape[0]], # bottomright
+        [shape[1], 0], # bottomleft
     ], dtype=np.float32)
 
 def find_document_corners(image, points, debug=False):
     document_corners = np.array([
         _closest_point(corner, points)[1].flatten()
-        for corner in image_corners(image)
+        for corner in image_corners(image.shape)
     ])
 
     if debug:
@@ -160,9 +160,9 @@ def find_document_corners(image, points, debug=False):
 
     return document_corners
 
-def undistort_document(image, corners, debug=False):
-    transform = cv2.getPerspectiveTransform(corners, image_corners(image))
-    doc = cv2.warpPerspective(image, transform, (image.shape[1], image.shape[0]))
+def undistort_document(image, corners, output_shape, debug=False):
+    transform = cv2.getPerspectiveTransform(corners, image_corners(output_shape))
+    doc = cv2.warpPerspective(image, transform, (output_shape[1], output_shape[0]))
 
     if debug:
         img_debug = doc.copy()
@@ -179,7 +179,7 @@ def main(args):
     intersections = segmented_intersections(img, segmented, debug=args.debug)
 
     corners = find_document_corners(img, intersections, debug=args.debug)
-    document = undistort_document(img, corners, debug=args.debug)
+    document = undistort_document(img, corners, img.shape, debug=args.debug)
 
     cv2.destroyAllWindows()
 
