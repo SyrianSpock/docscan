@@ -3,7 +3,12 @@ import logging
 
 import cv2
 import numpy as np
+from PIL import Image
+import pytesseract
 
+PAPER_SIZES = {
+    'A4' : (2100, 2970) # 10 pixels per mm
+}
 
 def argparser(parser=None):
     parser = parser or argparse.ArgumentParser(description=__doc__)
@@ -12,6 +17,7 @@ def argparser(parser=None):
     parser.add_argument("--debug", action='store_true',
                         help='Display intermediate results')
     parser.add_argument('--verbose', '-v', action='count', default=3)
+    parser.add_argument('--paper-size', '-p', type=str, default='A4')
 
     return parser
 
@@ -180,6 +186,16 @@ def main(args):
 
     corners = find_document_corners(img, intersections, debug=args.debug)
     document = undistort_document(img, corners, img.shape, debug=args.debug)
+
+    gray = undistort_document(gray, corners, img.shape, debug=args.debug)
+
+    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10,10))
+    gray = clahe.apply(gray)
+
+    img = Image.fromarray(gray).resize(PAPER_SIZES[args.paper_size])
+
+    txt = pytesseract.image_to_string(img, lang='fra', config='--oem=2 --psm=2').encode('utf-8')
+    print(txt)
 
     cv2.destroyAllWindows()
 
