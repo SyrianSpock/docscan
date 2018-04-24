@@ -18,6 +18,7 @@ def argparser(parser=None):
                         help='Display intermediate results')
     parser.add_argument('--verbose', '-v', action='count', default=3)
     parser.add_argument('--paper-size', '-p', type=str, default='A4')
+    parser.add_argument('--lang', '-l', type=str, default=None)
 
     return parser
 
@@ -194,7 +195,7 @@ def main(args):
 
     img = Image.fromarray(gray).resize(PAPER_SIZES[args.paper_size])
 
-    txt = pytesseract.image_to_string(img, lang='fra', config='--oem=2 --psm=2').encode('utf-8')
+    txt = pytesseract.image_to_string(img, lang=args.lang, config='--oem=2 --psm=2').encode('utf-8')
     print(txt)
 
     cv2.destroyAllWindows()
